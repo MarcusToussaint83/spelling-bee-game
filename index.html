@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourth Grade Spelling Bee</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐝 Fourth Grade Spelling Bee 🐝</h1>
+            <p>Listen to words and practice spelling them!</p>
+        </header>
+
+        <main>
+            <div id="start-screen" class="screen active">
+                <h2>Welcome to the Spelling Bee! 🐝</h2>
+                <p>Choose your difficulty level to start practicing your spelling words.</p>
+                <div class="difficulty-selection">
+                    <div class="difficulty-option" data-level="1-bee">
+                        <div class="difficulty-header">
+                            <span class="bee-icons">🐝</span>
+                            <h3>Level 1: Easy</h3>
+                        </div>
+                        <p>Perfect for beginners! Simple words to build confidence.</p>
+                        <button class="difficulty-btn btn-primary">Start Level 1</button>
+                    </div>
+                    
+                    <div class="difficulty-option" data-level="2-bee">
+                        <div class="difficulty-header">
+                            <span class="bee-icons">🐝🐝</span>
+                            <h3>Level 2: Medium</h3>
+                        </div>
+                        <p>Challenge yourself with more complex spelling patterns.</p>
+                        <button class="difficulty-btn btn-primary">Start Level 2</button>
+                    </div>
+                    
+                    <div class="difficulty-option" data-level="3-bee">
+                        <div class="difficulty-header">
+                            <span class="bee-icons">🐝🐝🐝</span>
+                            <h3>Level 3: Hard</h3>
+                        </div>
+                        <p>Advanced words for spelling champions!</p>
+                        <button class="difficulty-btn btn-primary">Start Level 3</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="practice-screen" class="screen">
+                <div class="difficulty-indicator">
+                    <span id="current-difficulty"></span>
+                </div>
+                <div class="word-display">
+                    <h3>Current Word</h3>
+                    <div class="word-controls">
+                        <button id="hear-word-btn" class="btn-secondary">🔊 Hear Word</button>
+                        <button id="hear-sentence-btn" class="btn-secondary">📖 Hear in Sentence</button>
+                        <button id="repeat-word-btn" class="btn-secondary">🔄 Repeat Word</button>
+                    </div>
+                </div>
+
+                <div class="spelling-input">
+                    <h3>Spell the Word:</h3>
+                    <input type="text" id="spelling-input" placeholder="Type your spelling here..." autocomplete="off">
+                    <button id="submit-spelling-btn" class="btn-primary">Submit</button>
+                </div>
+
+                <div class="feedback" id="feedback">
+                    <div id="correct-answer-section" style="display: none;">
+                        <div class="correct-spelling">
+                            <h4>Correct Spelling:</h4>
+                            <p id="correct-word-display"></p>
+                        </div>
+                        <div class="next-controls">
+                            <button id="hear-again-btn" class="btn-secondary">🔊 Hear Word Again</button>
+                            <button id="next-word-btn" class="btn-primary">Next Word →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">Word 1 of 20</p>
+                </div>
+            </div>
+
+            <div id="results-screen" class="screen">
+                <h2>Great Job! 🎉</h2>
+                <div class="difficulty-result">
+                    <span id="completed-difficulty"></span>
+                </div>
+                <div class="results-summary">
+                    <p>You spelled <span id="correct-count">0</span> out of <span id="total-count">20</span> words correctly!</p>
+                    <p>Score: <span id="percentage">0</span>%</p>
+                </div>
+                <div class="word-review" id="word-review">
+                    <h3>Word Review:</h3>
+                    <div id="review-list"></div>
+                </div>
+                <button id="restart-btn" class="btn-primary">Try Again</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
