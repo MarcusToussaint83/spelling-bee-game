@@ -12,6 +12,13 @@ class SpellingBeeApp {
         this.googleTTSApiKey = 'YOUR_GOOGLE_TTS_API_KEY'; 
         this.useGoogleTTS = false; // Set to true when you have API key
         
+        // Streak tracking for competitive motivation
+        this.currentStreak = 0;
+        this.bestStreak = 0;
+        
+        // Load best streaks from localStorage
+        this.bestStreaks = this.loadBestStreaks();
+        
         this.wordLevels = {
             '1-bee': [
                 { word: "tag", sentence: "The price tag was attached to the gift." },
@@ -495,24 +502,43 @@ class SpellingBeeApp {
         if ('speechSynthesis' in window) {
             this.speechEnabled = true;
             
-            // Load voices properly (some browsers need this)
-            if (speechSynthesis.onvoiceschanged !== undefined) {
-                speechSynthesis.onvoiceschanged = () => {
-                    this.voicesLoaded = true;
-                };
-            }
-            
-            // Force voices to load
+            // Load voices
             speechSynthesis.getVoices();
+            
+            // Set up voices changed handler
+            speechSynthesis.onvoiceschanged = () => {
+                speechSynthesis.getVoices();
+            };
         } else {
             console.warn('Speech synthesis not supported in this browser');
         }
         
         // Make app globally accessible for onclick handlers
         window.app = this;
+        
+        // Initialize home screen streak display
+        this.updateHomeStreakDisplay();
     }
     
     setupEventListeners() {
+        // Back to home button
+        document.getElementById('back-to-home-btn').addEventListener('click', () => this.backToHome());
+        
+        // Word control buttons
+        document.getElementById('hear-word-btn').addEventListener('click', () => this.speakWord());
+        document.getElementById('hear-sentence-btn').addEventListener('click', () => this.speakSentence());
+        document.getElementById('repeat-word-btn').addEventListener('click', () => this.repeatWord());
+        
+        // Submit button
+        document.getElementById('submit-spelling-btn').addEventListener('click', () => this.checkSpelling());
+        
+        // Enter key support for spelling input
+        document.getElementById('spelling-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.checkSpelling();
+            }
+        });
+        
         // Difficulty selection buttons
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -521,20 +547,78 @@ class SpellingBeeApp {
             });
         });
         
-        document.getElementById('hear-word-btn').addEventListener('click', () => this.speakWord());
-        document.getElementById('hear-sentence-btn').addEventListener('click', () => this.speakSentence());
-        document.getElementById('repeat-word-btn').addEventListener('click', () => this.repeatWord());
-        document.getElementById('submit-spelling-btn').addEventListener('click', () => this.checkSpelling());
+        // Restart button
         document.getElementById('restart-btn').addEventListener('click', () => this.restart());
+    }
+    
+    loadBestStreaks() {
+        const saved = localStorage.getItem('spellingBeeBestStreaks');
+        return saved ? JSON.parse(saved) : {
+            '1-bee': [],
+            '2-bee': [],
+            '3-bee': []
+        };
+    }
+    
+    saveBestStreaks() {
+        localStorage.setItem('spellingBeeBestStreaks', JSON.stringify(this.bestStreaks));
+    }
+    
+    addBestStreak(level, streak) {
+        if (streak <= 0) return;
         
-        // Event listeners for improved flow will be set up dynamically
+        // Add the new streak
+        this.bestStreaks[level].push({
+            streak: streak,
+            date: new Date().toLocaleDateString()
+        });
         
-        // Allow Enter key to submit spelling
-        document.getElementById('spelling-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.checkSpelling();
+        // Sort by streak value (highest first)
+        this.bestStreaks[level].sort((a, b) => b.streak - a.streak);
+        
+        // Keep only top 3
+        this.bestStreaks[level] = this.bestStreaks[level].slice(0, 3);
+        
+        // Save to localStorage
+        this.saveBestStreaks();
+    }
+    
+    updateHomeStreakDisplay() {
+        // Update each difficulty option with its top 3 streaks
+        const levels = ['1-bee', '2-bee', '3-bee'];
+        
+        levels.forEach(level => {
+            const streaksContainer = document.getElementById(`streaks-${level}`);
+            if (streaksContainer) {
+                const streaks = this.bestStreaks[level];
+                
+                if (streaks.length === 0) {
+                    streaksContainer.innerHTML = '<p class="no-streaks">No streaks yet - be the first!</p>';
+                } else {
+                    streaksContainer.innerHTML = streaks.map((streak, index) => {
+                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                        return `<div class="streak-item">
+                            <span class="medal">${medal}</span>
+                            <span class="streak-value">${streak.streak} 🔥</span>
+                            <span class="streak-date">${streak.date}</span>
+                        </div>`;
+                    }).join('');
+                }
             }
         });
+    }
+    
+    backToHome() {
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+            speechSynthesis.cancel();
+        }
+        
+        // Update best streaks display on home screen
+        this.updateHomeStreakDisplay();
+        
+        // Go back to start screen
+        this.showScreen('start-screen');
     }
     
     selectDifficulty(level) {
@@ -546,10 +630,12 @@ class SpellingBeeApp {
     startSpellingBee() {
         this.currentWordIndex = 0;
         this.correctAnswers = 0;
+        this.currentStreak = 0;
         this.userAnswers = [];
         this.shuffleWords();
         this.showScreen('practice-screen');
         this.updateDifficultyIndicator();
+        this.updateStreakDisplay();
         this.loadCurrentWord();
         this.updateProgress();
     }
@@ -570,12 +656,51 @@ class SpellingBeeApp {
     
     updateDifficultyIndicator() {
         const indicator = document.getElementById('current-difficulty');
-        const levelNum = this.currentDifficulty.split('-')[0];
-        const beeIcons = '🐝'.repeat(parseInt(levelNum));
-        const levelText = `Level ${levelNum} ${beeIcons}`;
+        const difficultyText = {
+            '1-bee': '🐝 4th Grade Level',
+            '2-bee': '🐝🐝 5th Grade Level', 
+            '3-bee': '🐝🐝🐝 6th Grade Level'
+        };
         
-        indicator.textContent = levelText;
-        indicator.parentElement.className = `difficulty-indicator level-${levelNum}`;
+        indicator.textContent = difficultyText[this.currentDifficulty];
+        
+        // Apply difficulty-specific styling
+        indicator.className = 'difficulty-indicator';
+        if (this.currentDifficulty === '1-bee') {
+            indicator.classList.add('level-1');
+        } else if (this.currentDifficulty === '2-bee') {
+            indicator.classList.add('level-2');
+        } else if (this.currentDifficulty === '3-bee') {
+            indicator.classList.add('level-3');
+        }
+    }
+    
+    updateStreakDisplay() {
+        const streakElement = document.getElementById('streak-display');
+        
+        if (!streakElement) return;
+        
+        // Update streak display with motivational text
+        let streakText = `🔥 Streak: ${this.currentStreak}`;
+        let streakClass = 'streak-normal';
+        
+        if (this.currentStreak >= 10) {
+            streakText = `🔥🔥 ON FIRE! Streak: ${this.currentStreak}`;
+            streakClass = 'streak-fire';
+        } else if (this.currentStreak >= 5) {
+            streakText = `🔥 Hot Streak! ${this.currentStreak}`;
+            streakClass = 'streak-hot';
+        } else if (this.currentStreak >= 3) {
+            streakText = `🔥 Warming up! ${this.currentStreak}`;
+            streakClass = 'streak-warm';
+        }
+        
+        if (this.bestStreak > 0 && this.currentStreak < this.bestStreak) {
+            streakText += ` (Best: ${this.bestStreak})`;
+        }
+        
+        streakElement.textContent = streakText;
+        streakElement.className = `streak-display ${streakClass}`;
     }
     
     loadCurrentWord() {
@@ -696,11 +821,17 @@ class SpellingBeeApp {
         
         if (isCorrect) {
             this.correctAnswers++;
+            this.currentStreak++;
+            if (this.currentStreak > this.bestStreak) {
+                this.bestStreak = this.currentStreak;
+            }
             this.showCorrectAnswer();
         } else {
+            this.currentStreak = 0; // Reset streak on incorrect answer
             this.showIncorrectAnswer();
-            setTimeout(() => this.nextWord(), 2500); // Still auto-advance for incorrect answers
         }
+        
+        this.updateStreakDisplay();
     }
     
     showCorrectAnswer() {
@@ -772,7 +903,29 @@ class SpellingBeeApp {
     
     showIncorrectAnswer() {
         const currentWord = this.words[this.currentWordIndex];
-        this.showFeedback(false, `❌ Not quite. The correct spelling is "${currentWord.word}".`);
+        
+        // Disable input and submit button
+        document.getElementById('spelling-input').disabled = true;
+        document.getElementById('submit-spelling-btn').disabled = true;
+        
+        // Show incorrect answer with options
+        const feedback = document.getElementById('feedback');
+        const incorrectAnswerHTML = `
+            <div class="incorrect-answer-section">
+                <div class="incorrect-message">
+                    <p>❌ Not quite. The correct spelling is:</p>
+                    <p class="correct-word">${currentWord.word}</p>
+                </div>
+                <div class="incorrect-controls">
+                    <button onclick="app.tryAgain()" class="btn-secondary">🔄 Try Again</button>
+                    <button onclick="app.nextWord()" class="btn-primary">Next Word →</button>
+                </div>
+            </div>
+        `;
+        
+        if (feedback) {
+            feedback.innerHTML = incorrectAnswerHTML;
+        }
     }
     
     showFeedback(isCorrect, message) {
@@ -796,12 +949,37 @@ class SpellingBeeApp {
         if (submitBtn) submitBtn.disabled = false;
     }
     
+    tryAgain() {
+        // Clear the feedback and re-enable input
+        this.clearFeedback();
+        
+        // Clear the input field and focus it
+        const spellingInput = document.getElementById('spelling-input');
+        spellingInput.value = '';
+        spellingInput.focus();
+        
+        // Speak the word again so they can retry
+        setTimeout(() => this.speakWord(), 500);
+    }
+    
     nextWord() {
         this.currentWordIndex++;
         
         if (this.currentWordIndex < this.words.length) {
-            this.loadCurrentWord();
-            this.updateProgress();
+            // Add exit animation to current screen
+            const currentScreen = document.querySelector('.screen.active');
+            if (currentScreen) {
+                currentScreen.classList.add('exit');
+                
+                // Wait for exit animation, then load new word
+                setTimeout(() => {
+                    this.loadCurrentWord();
+                    this.updateProgress();
+                }, 300);
+            } else {
+                this.loadCurrentWord();
+                this.updateProgress();
+            }
         } else {
             this.showResults();
         }
@@ -820,19 +998,67 @@ class SpellingBeeApp {
     }
     
     showResults() {
-        this.showScreen('results-screen');
-        
+        const resultsScreen = document.getElementById('results-screen');
         const percentage = Math.round((this.correctAnswers / this.words.length) * 100);
-        document.getElementById('correct-count').textContent = this.correctAnswers;
-        document.getElementById('total-count').textContent = this.words.length;
-        document.getElementById('percentage').textContent = percentage;
         
-        // Show completed difficulty
-        const levelNum = this.currentDifficulty.split('-')[0];
-        const beeIcons = '🐝'.repeat(parseInt(levelNum));
-        document.getElementById('completed-difficulty').textContent = `Completed Level ${levelNum} ${beeIcons}`;
+        // Save the best streak for this level
+        this.addBestStreak(this.currentDifficulty, this.bestStreak);
         
-        this.displayWordReview();
+        let message = '';
+        if (percentage === 100) {
+            message = '🏆 Perfect! You spelled every word correctly!';
+        } else if (percentage >= 80) {
+            message = '🌟 Excellent work!';
+        } else if (percentage >= 60) {
+            message = '👍 Good job!';
+        } else {
+            message = '📚 Keep practicing!';
+        }
+        
+        // Add streak achievement message
+        let streakMessage = '';
+        if (this.bestStreak >= 10) {
+            streakMessage = `🔥🔥 Amazing! You hit a streak of ${this.bestStreak} correct words in a row!`;
+        } else if (this.bestStreak >= 5) {
+            streakMessage = `🔥 Great job! Your best streak was ${this.bestStreak} correct words in a row!`;
+        } else if (this.bestStreak >= 3) {
+            streakMessage = `🔥 Nice! Your best streak was ${this.bestStreak} correct words in a row!`;
+        }
+        
+        resultsScreen.innerHTML = `
+            <h2>Spelling Bee Complete!</h2>
+            <div class="results-summary">
+                <p>${message}</p>
+                ${streakMessage ? `<p class="streak-achievement">${streakMessage}</p>` : ''}
+                <p>You spelled <strong>${this.correctAnswers}</strong> out of <strong>${this.words.length}</strong> words correctly.</p>
+                <p>Score: <strong>${percentage}%</strong></p>
+                <div class="streak-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Best Streak</span>
+                        <span class="stat-value">${this.bestStreak} 🔥</span>
+                    </div>
+                </div>
+            </div>
+            <div class="results-details">
+                <h3>Your Answers:</h3>
+                <div class="answers-list">
+                    ${this.userAnswers.map((answer, index) => `
+                        <div class="answer-item ${answer.correct ? 'correct' : 'incorrect'}">
+                            <span class="word-number">${index + 1}.</span>
+                            <span class="word">${answer.word}</span>
+                            <span class="user-spelling">${answer.userSpelling}</span>
+                            <span class="status">${answer.correct ? '✅' : '❌'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="results-actions">
+                <button onclick="app.startSpellingBee()" class="btn-primary">Try Again</button>
+                <button onclick="app.showScreen('difficulty-selection')" class="btn-secondary">Change Difficulty</button>
+            </div>
+        `;
+        
+        this.showScreen('results-screen');
     }
     
     displayWordReview() {

@@ -3,53 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fourth Grade Spelling Bee</title>
+    <title>4th-6th Grade Spelling Bee</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🐝 Fourth Grade Spelling Bee 🐝</h1>
-            <p>Listen to words and practice spelling them!</p>
+            <h1>🐝 4th-6th Grade Spelling Bee</h1>
+            <p>Master your spelling skills with our interactive spelling bee!</p>
         </header>
 
         <main>
             <div id="start-screen" class="screen active">
-                <h2>Welcome to the Spelling Bee! 🐝</h2>
+                <h2>Welcome to the 4th-6th Grade Spelling Bee! 🐝</h2>
                 <p>Choose your difficulty level to start practicing your spelling words.</p>
                 <div class="difficulty-selection">
                     <div class="difficulty-option" data-level="1-bee">
                         <div class="difficulty-header">
                             <span class="bee-icons">🐝</span>
-                            <h3>Level 1: Easy</h3>
+                            <h3>Level 1: 4th Grade</h3>
                         </div>
-                        <p>Perfect for beginners! Simple words to build confidence.</p>
+                        <p>Great for 4th graders! Build confidence with essential words.</p>
+                        <div class="best-streaks">
+                            <h4>🏆 Top Streaks</h4>
+                            <div id="streaks-1-bee" class="streaks-list"></div>
+                        </div>
                         <button class="difficulty-btn btn-primary">Start Level 1</button>
                     </div>
-                    
                     <div class="difficulty-option" data-level="2-bee">
                         <div class="difficulty-header">
                             <span class="bee-icons">🐝🐝</span>
-                            <h3>Level 2: Medium</h3>
+                            <h3>Level 2: 5th Grade</h3>
                         </div>
-                        <p>Challenge yourself with more complex spelling patterns.</p>
+                        <p>Perfect for 5th graders! Challenge yourself with intermediate words.</p>
+                        <div class="best-streaks">
+                            <h4>🏆 Top Streaks</h4>
+                            <div id="streaks-2-bee" class="streaks-list"></div>
+                        </div>
                         <button class="difficulty-btn btn-primary">Start Level 2</button>
                     </div>
-                    
                     <div class="difficulty-option" data-level="3-bee">
                         <div class="difficulty-header">
                             <span class="bee-icons">🐝🐝🐝</span>
-                            <h3>Level 3: Hard</h3>
+                            <h3>Level 3: 6th Grade</h3>
                         </div>
-                        <p>Advanced words for spelling champions!</p>
+                        <p>Ready for 6th grade? Advanced words for spelling champions!</p>
+                        <div class="best-streaks">
+                            <h4>🏆 Top Streaks</h4>
+                            <div id="streaks-3-bee" class="streaks-list"></div>
+                        </div>
                         <button class="difficulty-btn btn-primary">Start Level 3</button>
                     </div>
                 </div>
             </div>
 
             <div id="practice-screen" class="screen">
-                <div class="difficulty-indicator">
-                    <span id="current-difficulty"></span>
+                <div class="practice-header">
+                    <button id="back-to-home-btn" class="back-btn">← Back to Home</button>
+                    <div class="game-info">
+                        <div class="difficulty-indicator">
+                            <span id="current-difficulty"></span>
+                        </div>
+                        <div id="streak-display" class="streak-display"></div>
+                    </div>
                 </div>
                 <div class="word-display">
                     <h3>Current Word</h3>
