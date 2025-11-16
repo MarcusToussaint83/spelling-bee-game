@@ -19,6 +19,99 @@ class SpellingBeeApp {
         // Load best streaks from localStorage
         this.bestStreaks = this.loadBestStreaks();
         
+        // Funny randomized affirmations for different streak levels
+        this.streakAffirmations = {
+            short: [
+                "Spell yeah!",
+                "You're spelling it like you're smelling it!",
+                "Three-peat! You can't be beat!",
+                "Somebody stop this kid - they're too good!",
+                "Your fingers must be made of magic!",
+                "Brain cells: ACTIVATED!",
+                "You're cooking with gas now!",
+                "Four in a row? Steal the show!",
+                "High five! You're alive and spelling!",
+                "The spelling train has left the station!",
+                "You're making it look EASY!",
+                "Spell-tacular performance!"
+            ],
+            medium: [
+                "Your brain is basically a supercomputer!",
+                "Six, seven, eight - you're just GREAT!",
+                "Are you powered by spelling batteries?!",
+                "The crowd goes WILD!",
+                "You're on a roll like a cinnamon bun!",
+                "Eight words? That's UN-BEE-LIEVABLE!",
+                "Your spelling powers are over 9000!",
+                "Someone turned on BEAST MODE!",
+                "You're slaying the spelling game!",
+                "Ten words! You deserve a standing ovation!",
+                "Your brain deserves a trophy!",
+                "Are you secretly a robot? Because this is PERFECT!",
+                "Spelling ninjas got NOTHING on you!",
+                "You just leveled UP!",
+                "Your teachers are probably jealous!"
+            ],
+            long: [
+                "FIFTEEN?! That's bananas!",
+                "You're not just good, you're GOOOOOD!",
+                "The spelling bee is SHAKING right now!",
+                "Your parents must be SO proud!",
+                "Can we get your autograph NOW before you're famous?",
+                "You're spelling like your life depends on it!",
+                "Houston, we have a GENIUS!",
+                "Merriam and Webster are taking NOTES!",
+                "This streak is LEGENDARY! Tell your grandkids about this!",
+                "You could spell in your SLEEP at this point!",
+                "Your brain is LIT!",
+                "20 words?! Do you have a photographic memory?!",
+                "The dictionary is jealous of YOU!",
+                "You're not breaking records, you're SHATTERING them!",
+                "Alert the media! We got a spelling PRODIGY!",
+                "Your spelling cape is showing!",
+                "Did you eat spelling flakes for breakfast?!"
+            ],
+            epic: [
+                "25 WORDS?! Are you KIDDING me right now?!",
+                "They should put YOUR picture in the dictionary!",
+                "You've gone FULL SPELLING BEAST MODE!",
+                "This is the stuff of LEGENDS!",
+                "Somewhere, a spelling bee just fainted!",
+                "Your brain is basically a SPELLING FORTRESS!",
+                "Can you teach US how to spell?!",
+                "30 words! You're officially UNSTOPPABLE!",
+                "The bees are planning a parade in YOUR honor!",
+                "Scientists want to study your brain!",
+                "You just broke the internet with your spelling!",
+                "This streak should be in the Guinness Book!",
+                "Your spelling skills are OUT OF THIS WORLD!",
+                "The National Spelling Bee is calling... they want YOU!",
+                "You've reached SPELLING IMMORTALITY!",
+                "Spelling Hall of Fame? More like Spelling Hall of YOU!",
+                "Your brain deserves its own zip code!",
+                "40 words! That's not a streak, that's a DYNASTY!"
+            ],
+            silly: [
+                "You're spell-binding!",
+                "That's spell-icious!",
+                "You've got the spell-ebration started!",
+                "Spell-abrate good times, come on!",
+                "This is spell-endid!",
+                "You're un-bee-lievably good!",
+                "Bee-yond amazing!",
+                "You're the bee's knees!",
+                "Honey, you're SWEET at spelling!",
+                "You're creating quite a BUZZ!"
+            ],
+            motivational: [
+                "Your hard work is PAYING OFF!",
+                "Practice makes PERFECT - and you're proving it!",
+                "This is what dedication looks like!",
+                "Keep going - you're on your way to the TOP!",
+                "Champions are made of THIS!"
+            ]
+        };
+        
         this.wordLevels = {
             '1-bee': [
                 { word: "tag", sentence: "The price tag was attached to the gift." },
@@ -524,6 +617,9 @@ class SpellingBeeApp {
         // Back to home button
         document.getElementById('back-to-home-btn').addEventListener('click', () => this.backToHome());
         
+        // End game button
+        document.getElementById('end-game-btn').addEventListener('click', () => this.endGame());
+        
         // Word control buttons
         document.getElementById('hear-word-btn').addEventListener('click', () => this.speakWord());
         document.getElementById('hear-sentence-btn').addEventListener('click', () => this.speakSentence());
@@ -606,6 +702,19 @@ class SpellingBeeApp {
                 }
             }
         });
+    }
+    
+    endGame() {
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+            speechSynthesis.cancel();
+        }
+        
+        // Save the current streak if it's a good one
+        this.addBestStreak(this.currentDifficulty, this.currentStreak);
+        
+        // Show results immediately
+        this.showResults();
     }
     
     backToHome() {
@@ -701,6 +810,42 @@ class SpellingBeeApp {
         
         streakElement.textContent = streakText;
         streakElement.className = `streak-display ${streakClass}`;
+        
+        // Play audio affirmation for streak milestones
+        this.playStreakAffirmation();
+    }
+    
+    playStreakAffirmation() {
+        if (!this.speechEnabled) return;
+        
+        let affirmationArray = [];
+        
+        // Choose affirmation array based on streak level
+        if (this.currentStreak >= 25) {
+            affirmationArray = [...this.streakAffirmations.epic, ...this.streakAffirmations.silly];
+        } else if (this.currentStreak >= 15) {
+            affirmationArray = [...this.streakAffirmations.long, ...this.streakAffirmations.silly];
+        } else if (this.currentStreak >= 8) {
+            affirmationArray = [...this.streakAffirmations.medium, ...this.streakAffirmations.silly];
+        } else if (this.currentStreak >= 3) {
+            affirmationArray = [...this.streakAffirmations.short, ...this.streakAffirmations.motivational];
+        }
+        
+        // Get random affirmation from the chosen array
+        if (affirmationArray.length > 0) {
+            const randomIndex = Math.floor(Math.random() * affirmationArray.length);
+            const affirmation = affirmationArray[randomIndex];
+            
+            const utterance = new SpeechSynthesisUtterance(affirmation);
+            utterance.rate = 0.9;
+            utterance.pitch = this.currentStreak >= 15 ? 1.3 : 1.1;
+            utterance.volume = 0.8;
+            
+            // Add a short delay so it doesn't overlap with word pronunciation
+            setTimeout(() => {
+                speechSynthesis.speak(utterance);
+            }, 800);
+        }
     }
     
     loadCurrentWord() {

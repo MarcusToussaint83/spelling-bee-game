@@ -278,6 +278,12 @@ header p {
     margin-bottom: 32px;
 }
 
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
 .back-btn {
     background: transparent;
     color: var(--text-secondary);
@@ -288,7 +294,6 @@ header p {
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 16px;
 }
 
 .back-btn:hover {
@@ -296,6 +301,25 @@ header p {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
     transform: translateX(-2px);
+}
+
+.end-game-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    font-size: 0.85em;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.end-game-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-error);
+    color: var(--accent-error);
+    transform: translateX(2px);
 }
 
 .game-info {
